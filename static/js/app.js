@@ -1,83 +1,103 @@
-/**
-*@DOWNLOADJSON to get the first values
-*/
-d3.json("samples.json").then(function(data){
-    console.log(data);
-    var dropdown = d3.select("#selDataset")
-    data.names.forEach(d=> {
-        dropdown.append("option").property("value", d).text(d)
+// create init function to build inital plot when refreshed
+function init(){
+    buildPlot()
+};
+
+//create function that will apply once the option has changed
+function optionChanged() {
+    // Build the revised plot
+    buildPlot();
+  };
+
+//create a function that builds plot
+function buildPlot(){
+
+    d3.json("data/samples.json").then((data) =>{
+        //get a list of all the id names
+        var idValues = data.names;
+        console.log(idValues);
+
+        // Create the drop down menu by inserting every id
+        idValues.forEach(id => d3.select('#selDataset').append('option').text(id).property("value", id));
+
+        // Use D3 to select the current ID and store in a variable to work with
+        var currentID = d3.selectAll("#selDataset").node().value;
+        console.log(currentID);
+
+        //filter the data based on selection
+        filtered = data.samples.filter(entry => entry.id == currentID);
+        console.log(filtered);
+
+                // create the demographics panel
+        filterData2 = data.metadata.filter(entry => entry.id == currentID)
+
+        // create a demographics object to add to panel body
+        var panelDemo = {
+            'id: ': filterData2[0].id,
+            'ethnicity: ': filterData2[0].ethnicity,
+            'gender: ': filterData2[0].gender,
+            'age: ': filterData2[0].age,
+            'location: ': filterData2[0].location,
+            'bbtype: ': filterData2[0].bbtype,
+            'wfreq: ': filterData2[0].wfreq
+            }
+        
+        console.log(panelDemo)    
+        //select the id to append the key value pair under demographics panel
+        panelBody = d3.select("#sample-metadata")
+      
+        // remove the current demographic info to make way for new currentID
+        panelBody.html("")
+              
+        //append the key value pairs from demographics into the demographics panel
+        Object.entries(panelDemo).forEach(([key, value]) => {
+            panelBody.append('p').attr('style', 'font-weight: bold').text(key + value)
+            });
+        //testing for x values
+        console.log(filtered[0].sample_values);
+        console.log(filtered[0].sample_values.slice(0,10));
+    
+        //y vales test
+        console.log(filtered[0].otu_ids.slice(0,10).reverse());
+        console.log(filtered[0].otu_ids.slice(0,10).reverse().map(id => "OTU " + id.toString()));
+
+        // horizontal bar chart
+        var data = [{
+            type: 'bar',
+            x: filtered[0].sample_values.slice(0,10).reverse(),
+            y: filtered[0].otu_ids.slice(0,10).reverse().map(id => "OTU " + id.toString()),
+            orientation: 'h'
+        }];
+      
+      Plotly.newPlot('bar', data);
+
+          // bubble chart
+      var trace2 = {
+        x: filtered[0].otu_ids,
+        y: filtered[0].sample_values,
+        text: filtered[0].otu_labels,
+        mode: 'markers',
+        marker: {
+          color : filtered[0].otu_ids,
+          size : filtered[0].sample_values
+        }
+      };
+     
+      var data = [trace2];
+    
+      var layout = {
+        title: 'OTU Info For Subject',
+        showlegend: false,
+       };
+    
+      Plotly.newPlot('bubble', data, layout);  
+
     });
-    builtPlot(940)
-})
 
-function buildPlot(id) {
-    d3.json("samples.json").then(function(data){
-        console.log(data)
+};
 
-        var filteredsample = data.samples.filter(s => s.id == id)[0];
-        var values = filteredsample.sample_values.slice(0,10).reverse();
-        var otuids = filteredsample.otu_ids.map(x => `OTUID ${x}`).slice(0,10).reverse();
-        var otulabels = filteredsample.otu_labels.slice(0,10).reverse();
-
-
-        var trace1= {
-            x: values,
-            y: otuids,
-            text: otulabels,
-            type: "bar",
-            orientation:"h",
-        };
-
-        var data1 =[trace1];
-        var layout1 = {
-            title: "Top 10 Bacteria Cultures Found",
-            margin: {
-                l: 100,
-                r: 100, 
-                t: 100,
-                b: 30
-            }
-        };
-
-        Plotly.newPlot("bar", data1, layout1); 
-
-        var trace2= {
-            x: filteredsample.otu_ids,
-            y: filteredsample.sample_values,
-            text: filteredsample.otu_labels,
-            mode: "markers",
-            marker: {
-                size: filteredsample.sample_values,
-                color: filteredsample.otu_ids,
-                colorscale: "Earth"
-            }
-        };
-
-        var data2 =[trace2];
-        var layout2 = {
-            title: "Bacteria Cultures Per Sample",
-            margin: {
-                l: 100,
-                r: 100, 
-                t: 100,
-                b: 30
-            }
-        };
-
-        Plotly.newPlot("bubble", data2, layout2); 
-
-        var metadata = data.metadata.filter(s => s.id == id)[0];
-        var info = d3.select("#sample-metadata")
-        info.html('')
-        Object.entries(metadata).forEach(([key, value])=> {
-            info.append("h5").html(`<b>${key}</b> ${value}`);
-        })
-
-        var trace3 = [
-            {
-                domain: {x: [0,1], y: [0,1]},
-                value: metadata.wfreq,
-                title: {text: "Belly Button Washing Frequency"},
+//run init to  set the main page
+init();
                 type: "indicator",
                 mode: "gauge+number",
                 gauge: {
