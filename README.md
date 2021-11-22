@@ -1,7 +1,7 @@
 # Belly-Button-Biodiversity
 Plot.ly Practice
 
-[bacteria](https://user-images.githubusercontent.com/85190553/142916574-5bf0a848-d710-46a7-b7da-fda29d19c2a3.jpg)
+![bacteria](https://user-images.githubusercontent.com/85190553/142916574-5bf0a848-d710-46a7-b7da-fda29d19c2a3.jpg)
 
 https://shindokl90-lab.github.io/Belly-Button-Biodiversity/
 
