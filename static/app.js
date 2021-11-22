@@ -3,17 +3,16 @@ function init(){
     buildPlot()
 };
 
-//create function that will apply once the option has changed
+//create function for data changes
 function optionChanged() {
     // Build the revised plot
     buildPlot();
   };
 
-//create a function that builds plot
+//build your plots
 function buildPlot(){
 
     d3.json("data/samples.json").then((data) =>{
-        //get a list of all the id names
         var idValues = data.names;
         console.log(idValues);
 
