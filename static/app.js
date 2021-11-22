@@ -1,5 +1,3 @@
-import 'bootswatch/dist/lux/bootstrap.min.css';
-
 // create init function to build inital plot when refreshed
 function init(){
     buildPlot()
