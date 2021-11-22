@@ -1,120 +1,91 @@
 /**
 *@DOWNLOADJSON to get the first values
 */
-var sampleDataValues 
-var sampleDataOtuId
-var sampleDataOtuLabels
-var sampleMetaData
-
-//Identify and define the top 10 OTUs
-var sampleTop10DataValues
-var sampleTop10DataOtuId
-var sampleTop10DataOtuLabels
-
-var sampleDataOtuId
-var idNames
-var data 
-
-d3.json("samples.json").then(newData => {
-    console.log(newData);
-    data = newData;
+d3.json("samples.json").then(function(data){
     console.log(data);
-    idNames = data.names;
-    console.log((idName) => {
-        d3.select("#selDataset").append("option").text(idName);
-
+    var dropdown = d3.select("#selDataset")
+    data.names.forEach(d=> {
+        dropdown.append("option").property("value", d).text(d)
     });
-    init()
-});
-function init(){
-    sampleData = data.samples.filter(sample => sample.id == "940")[0];
-        console.log(sampleData);
-            sampleDataValues = sampleData.sample_values;
-            sampleDataOtuId = sampleData.otu_ids;
-            sampleDataOtuLabels = sampleData.otu_labels;
+    builtPlot(940)
+})
 
-            sampleTop10DataValues = sampleData.sample_values.slice(0,10).reverse();
-            sampleTop10DataOtuId = sampleData.otu_ids.slice(0,10).reverse();
-            sampleDataOtuLabels = sampleData.otu_labels.slice(0,10).reverse();
+function buildPlot(id) {
+    d3.json("samples.json").then(function(data){
+        console.log(data)
 
-            console.log(sampleTop10DataValues);
-            console.log(sampleTop10DataOtuId);
-            console.log(sampleTop10DataOtuLabels);
-        
-        /**Bar Chart */
-        var traceBar = {
-            type: "bar", 
-            y: sampleTop10DataOtuId.map(id => "otu" + id),
-            x: sampleTop10DataValues, 
-            text: sampleTop10DataOtuLabels, 
-            orientation: 'h'
+        var filteredsample = data.samples.filter(s => s.id == id)[0];
+        var values = filteredsample.sample_values.slice(0,10).reverse();
+        var otuids = filteredsample.otu_ids.map(x => `OTUID ${x}`).slice(0,10).reverse();
+        var otulabels = filteredsample.otu_labels.slice(0,10).reverse();
+
+
+        var trace1= {
+            x: values,
+            y: otuids,
+            text: otulabels,
+            type: "bar",
+            orientation:"h",
         };
-        var traceData1 = [traceBar];
-        var layoutBar = {
-            title: "Top Ten OTUs", 
-            yaxis: {title: "OTU Label"}, 
-            xaxis: {title: "Values"}
+
+        var data1 =[trace1];
+        var layout1 = {
+            title: "Top 10 Bacteria Cultures Found",
+            margin: {
+                l: 100,
+                r: 100, 
+                t: 100,
+                b: 30
+            }
         };
-        plotly.newPlot("bar", traceData1, layoutBar);
-        
-        /**Bubble Chart */
-        var traceBubble = {
-            x: sampleDataOtuId, 
-            y: sampleDataValues, 
-            mode: 'markers', 
-            text: sampleDataOtuLabels,
+
+        Plotly.newPlot("bar", data1, layout1); 
+
+        var trace2= {
+            x: filteredsample.otu_ids,
+            y: filteredsample.sample_values,
+            text: filteredsample.otu_labels,
+            mode: "markers",
             marker: {
-                color: sampleDataOtuId, 
-                size: sampleDataValues,
-            },
-            type: 'scatter'
+                size: filteredsample.sample_values,
+                color: filteredsample.otu_ids,
+                colorscale: "Earth"
+            }
         };
-        var traceData2 = [traceBubble];
-        var layoutBubble = {
-            title: "OTU ID",
-            showlegend: false, 
-            height: 500, 
-            width: 1200
+
+        var data2 =[trace2];
+        var layout2 = {
+            title: "Bacteria Cultures Per Sample",
+            margin: {
+                l: 100,
+                r: 100, 
+                t: 100,
+                b: 30
+            }
         };
-        plotly.newPlot("bubble", traceData2, layoutBubble);
 
-        /** Meta Data */
-        sampleMetaData = data.metadata.filter(sample => sample.id === 940)[0];
-        console.log(sampleMetaData);
-        Object.entries(sampleMetaData).forEach(
-            ([key, value]) => d3.select("#sample-metadata").append("h5").text(key + ": " + value)
+        Plotly.newPlot("bubble", data2, layout2); 
 
-        )
-}
-/** Update charts Below */
-d3.selectAll("#selDataset").on("change", updatePlot);
+        var metadata = data.metadata.filter(s => s.id == id)[0];
+        var info = d3.select("#sample-metadata")
+        info.html('')
+        Object.entries(metadata).forEach(([key, value])=> {
+            info.append("h5").html(`<b>${key}</b> ${value}`);
+        })
 
-function updatePlot(){
-    var inputElement = d3.select("#selDataset");
-    var inputValue = inputElement.property("value");
-    console.log(inputValue);
-
-    sampleData = data.samples.filter(sample => sample.id === inputValue) [0];
-    console.log(sampleData);
-
-    sampleDataValues = sampleData.sample_values;
-    sampleDataOtuId = sampleData.otu_ids;
-    sampleDataOtuLabels = sampleData.otu_labels;
-
-    sampleTop10DataValues = sampleData.sample_values.slice(0,10).reverse();
-    sampleTop10DataOtuId = sampleData.otu_ids.slice(0,10).reverse();
-    sampleTop10DataOtuLabels = sampleData.otu_labels.slice(0,10).reverse();
-
-    Plotly.restyle("bar", "x", [sampleTop10DataValues]);
-    Plotly.restyle("bar", "y", [sampleTop10DataOtuId.map(outId => `OTU ${outId}`)]);
-    Plotly.restyle("bar", "text", [sampleTop10DataOtuLabels]);
-
-    Plotly.restyle("bubble", "x", [sampleDataOtuId]);
-    Plotly.restyle("bubble", "y", [sampleDataValues]);
-    Plotly.restyle("bubble", "text", [sampleDataOtuLabels]);
-
-    sampleMetaData = data.metadata.filter(sample => sample.id == inputvalue)[0];
-    d3.select("#sample-metadata").html("");
-    Object.entries(sampleMetaData).forEach(([key, value]) => d3.select("#sample-metadata").append("p").text(`${key}: ${value}`));
-    
-}
+        var trace3 = [
+            {
+                domain: {x: [0,1], y: [0,1]},
+                value: metadata.wfreq,
+                title: {text: "Belly Button Washing Frequency"},
+                type: "indicator",
+                mode: "gauge+number",
+                gauge: {
+                    axis: {range: [0,9]},
+                }
+            }
+        ];
+        var layout = {width: 600, height: 500, margin: {t:0, b:0}};
+        Plotly.newPlot("gauge", trace3, layout);
+    })
+};
